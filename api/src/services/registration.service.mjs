@@ -44,7 +44,7 @@ export async function register(eventId, participant) {
   const count =
     await registrationRepository.countByEventId(eventId);
 
-  if (count > event.capacity) {
+  if (count >= event.capacity) {
     throw new AppError(
       409,
       'CONFLICT',
