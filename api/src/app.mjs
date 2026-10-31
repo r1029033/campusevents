@@ -5,48 +5,10 @@
 // hard to change safely. Part 1 of the assignment: find out why, then split it into layers.
 
 import express from 'express';
-import { DataTypes, Sequelize } from 'sequelize';
-import { createLogger, format, transports } from 'winston';
 import { z } from 'zod';
-
-if (process.env.NODE_ENV !== 'test') {
-  try {
-    process.loadEnvFile();
-  } catch {
-    // no .env
-  }
-}
-
-const logger = createLogger({
-  level: process.env.LOG_LEVEL || 'info',
-  silent: process.env.NODE_ENV === 'test',
-  format: format.combine(format.timestamp(), format.json()),
-  transports: [new transports.Console()]
-});
-
-// ---------------------------------------------------------------- database
-
-export const sequelize = new Sequelize({
-  dialect: 'sqlite',
-  storage: process.env.DB_STORAGE || './data/events.sqlite',
-  logging: false
-});
-
-export const Event = sequelize.define('Event', {
-  title: { type: DataTypes.STRING(120), allowNull: false },
-  description: { type: DataTypes.TEXT, allowNull: true },
-  location: { type: DataTypes.STRING(120), allowNull: false },
-  startsAt: { type: DataTypes.DATE, allowNull: false },
-  capacity: { type: DataTypes.INTEGER, allowNull: false, validate: { min: 1 } }
-});
-
-export const Registration = sequelize.define('Registration', {
-  name: { type: DataTypes.STRING(100), allowNull: false },
-  email: { type: DataTypes.STRING(254), allowNull: false }
-});
-
-Event.hasMany(Registration, { foreignKey: { name: 'eventId', allowNull: false }, onDelete: 'CASCADE' });
-Registration.belongsTo(Event, { foreignKey: 'eventId' });
+import { logger } from './config/logger.mjs';
+import { sequelize } from './db/sequelize.mjs';
+import { Event, Registration } from './models/index.mjs';
 
 // ---------------------------------------------------------------- validation
 
@@ -246,10 +208,6 @@ app.post('/api/events/:id/registrations', async (req, res, next) => {
         const reg = await Registration.create({ eventId: ev.id, name: data.data.name, email: data.data.email });
         logger.info('new registration for ' + ev.title + ': ' + data.data.name + ' <' + data.data.email + '>');
 
-        // TODO send a confirmation mail
-        // const transporter = nodemailer.createTransport(process.env.SMTP_URL);
-        // await transporter.sendMail({ to: data.data.email, subject: 'You are registered for ' + ev.title });
-
         return res.status(201).json(reg);
       } else {
         return res.status(409).json({ error: { code: 'CONFLICT', message: `${data.data.email} is already registered for this event` } });
@@ -301,50 +259,3 @@ app.use((err, req, res, _next) => {
   logger.error(err.message, { stack: err.stack });
   res.status(500).json({ error: { code: 'INTERNAL_ERROR', message: 'Something went wrong' } });
 });
-
-// ---------------------------------------------------------------- demo data
-
-const inDays = (days, hour = 14) => {
-  const date = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
-  date.setHours(hour, 0, 0, 0);
-  return date;
-};
-
-export async function seedDemoData() {
-  await Event.bulkCreate([
-    {
-      title: 'Welcome Day IXD',
-      description: 'Meet your classmates, lecturers and the projects of this year.',
-      location: 'Campus Mechelen',
-      startsAt: inDays(7, 10),
-      capacity: 120
-    },
-    {
-      title: 'Prototyping with Figma & APIs',
-      description: 'Connect a clickable prototype to real data in one afternoon.',
-      location: 'Room B204',
-      startsAt: inDays(14),
-      capacity: 25
-    },
-    {
-      title: 'Backend Bootcamp',
-      description: 'A small, hands-on session. Only two seats, so be quick.',
-      location: 'Room C101',
-      startsAt: inDays(21),
-      capacity: 2
-    },
-    {
-      title: 'Portfolio Review',
-      description: 'Get feedback on your portfolio from industry guests.',
-      location: 'Online',
-      startsAt: inDays(-10),
-      capacity: 40
-    }
-  ]);
-
-  await Registration.bulkCreate([
-    { eventId: 1, name: 'Ada Lovelace', email: 'ada@example.com' },
-    { eventId: 1, name: 'Grace Hopper', email: 'grace@example.com' },
-    { eventId: 2, name: 'Alan Turing', email: 'alan@example.com' }
-  ]);
-}
