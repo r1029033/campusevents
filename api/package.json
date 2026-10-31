@@ -9,7 +9,8 @@
     "dev": "node --watch src/server.mjs",
     "seed": "node src/seed.mjs",
     "test": "node --env-file=.env.test --test --test-reporter=spec \"tests/**/*.test.mjs\"",
-    "test:coverage": "node --env-file=.env.test --test --experimental-test-coverage \"tests/**/*.test.mjs\""
+    "test:coverage": "node --env-file=.env.test --test --experimental-test-coverage \"tests/**/*.test.mjs\"",
+    "worker:mail": "node src/workers/mail.worker.mjs"
   },
   "dependencies": {
     "amqplib": "^2.2.0",

@@ -2,6 +2,9 @@ import { logger } from '../config/logger.mjs';
 import { AppError } from '../errors/app-error.mjs';
 import * as eventRepository from '../repositories/event.repository.mjs';
 import * as registrationRepository from '../repositories/registration.repository.mjs';
+import {
+  publishRegistrationConfirmation
+} from '../messaging/mail.publisher.mjs';
 
 const eventNotFound = (id) =>
   new AppError(
@@ -57,6 +60,14 @@ export async function register(eventId, participant) {
     name: participant.name,
     email: participant.email
   });
+
+  void publishRegistrationConfirmation({
+  email: registration.email,
+  name: registration.name,
+  eventTitle: event.title,
+  startsAt: event.startsAt,
+  location: event.location
+});
 
   logger.info(
     `new registration for ${event.title}: ` +

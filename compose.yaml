@@ -12,3 +12,8 @@ services:
     image: redis:8-alpine
     ports:
       - "6379:6379"
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "1025:1025"
+      - "8025:8025"

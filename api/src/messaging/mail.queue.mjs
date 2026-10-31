@@ -1,0 +1,1 @@
+export const mailQueueName = 'registration-confirmations';
