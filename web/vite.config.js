@@ -5,8 +5,7 @@ export default defineConfig({
   plugins: [vue()],
   server: {
     port: 5173,
-    // Every call to /api/... is forwarded to the Express API.
-    // The browser only talks to one origin, so no CORS needed in development.
+    // In development the browser talks to Vite, which forwards /api to Express.
     proxy: {
       '/api': 'http://localhost:3000'
     }

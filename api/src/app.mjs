@@ -1,6 +1,8 @@
 // Creates the Express application and wires middleware, routes and error handling.
 
+import path from 'node:path';
 import express from 'express';
+import { env } from './config/env.mjs';
 import { logger } from './config/logger.mjs';
 import { sequelize } from './db/sequelize.mjs';
 import { errorHandler } from './middleware/error-handler.mjs';
@@ -36,6 +38,20 @@ app.get('/api/health', async (_req, res) => {
 app.use('/api/events', eventRouter);
 app.use('/api/events', registrationRouter);
 app.use('/api/stats', statsRouter);
+
+app.use('/api', notFoundHandler);
+
+if (env.nodeEnv === 'production') {
+  const webDistPath = path.resolve(
+    import.meta.dirname,
+    '../../web/dist'
+  );
+
+  app.use(express.static(webDistPath));
+  app.get('/{*splat}', (_req, res) => {
+    res.sendFile(path.join(webDistPath, 'index.html'));
+  });
+}
 
 app.use(notFoundHandler);
 app.use(errorHandler);

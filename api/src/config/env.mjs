@@ -12,6 +12,7 @@ export const env = Object.freeze({
   logLevel: process.env.LOG_LEVEL ?? 'info',
   dbStorage: process.env.DB_STORAGE ?? './data/events.sqlite',
   amqpUrl: process.env.AMQP_URL,
+  redisUrl: process.env.REDIS_URL,
   smtpUrl: process.env.SMTP_URL,
   mailFrom:
     process.env.MAIL_FROM ??

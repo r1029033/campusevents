@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: campus-events
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm start -w api
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      - key: DB_STORAGE
+        value: /tmp/events.sqlite
+      - key: AMQP_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false

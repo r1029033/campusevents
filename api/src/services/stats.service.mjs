@@ -1,3 +1,5 @@
+import { cacheKeys, cacheTtlSeconds } from '../cache/cache-keys.mjs';
+import { getJson, setJson } from '../cache/redis-cache.mjs';
 import * as eventRepository from '../repositories/event.repository.mjs';
 import * as registrationRepository from '../repositories/registration.repository.mjs';
 
@@ -14,9 +16,14 @@ const determineStatus = (event, registered) => {
 };
 
 export async function getStats() {
-  const events = await eventRepository.findAll();
+  const cached = await getJson(cacheKeys.stats);
 
-  return Promise.all(
+  if (cached !== null) {
+    return cached;
+  }
+
+  const events = await eventRepository.findAll();
+  const stats = await Promise.all(
     events.map(async (event) => {
       const registered =
         await registrationRepository.countByEventId(event.id);
@@ -35,4 +42,7 @@ export async function getStats() {
       };
     })
   );
+
+  await setJson(cacheKeys.stats, stats, cacheTtlSeconds);
+  return stats;
 }
