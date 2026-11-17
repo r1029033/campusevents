@@ -8,6 +8,9 @@ import { UniqueConstraintError } from 'sequelize';
 import { sequelize } from '../db/sequelize.mjs';
 import { messageTypes } from '../messaging/message-types.mjs';
 import * as outboxRepository from '../repositories/outbox.repository.mjs';
+import {
+  buildRegistrationCreatedNotification
+} from '../messaging/notification-messages.mjs';
 
 const eventNotFound = (id) =>
   new AppError(
@@ -109,6 +112,11 @@ export async function register(eventId, participant) {
           transaction
         );
 
+        await outboxRepository.create(
+          buildRegistrationCreatedNotification(event),
+          transaction
+        );
+
         return {
           event,
           registration
@@ -140,10 +148,10 @@ export async function register(eventId, participant) {
   );
 
 
-  logger.info(
-    `new registration for ${event.title}: ` +
-      `${participant.name} <${participant.email}>`
-  );
+  logger.info('new registration', {
+    eventId: event.id,
+    registrationId: registration.id
+  });
 
   return registration;
 }

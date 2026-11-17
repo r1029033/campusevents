@@ -182,7 +182,7 @@ describe('Events API', () => {
     );
 
     it(
-      'stores a confirmation job with the registration',
+      'stores email and public notification jobs',
       async () => {
         const created = await request(app)
           .post('/api/events')
@@ -201,20 +201,62 @@ describe('Events API', () => {
 
         const messages = await OutboxMessage.findAll();
 
-        assert.equal(messages.length, 1);
-        assert.equal(
-          messages[0].type,
-          'email.registration-confirmation'
+        const emailMessages = messages.filter(
+          (message) =>
+            message.type ===
+            'email.registration-confirmation'
         );
+
+        const notificationMessages = messages.filter(
+          (message) =>
+            message.type ===
+            'notification.registration-created'
+        );
+
+        assert.equal(emailMessages.length, 1);
+        assert.equal(notificationMessages.length, 1);
+
+        const emailMessage = emailMessages[0];
+
         assert.equal(
-          messages[0].aggregateId,
+          emailMessage.aggregateId,
           String(response.body.id)
         );
+
         assert.equal(
-          messages[0].payload.email,
+          emailMessage.payload.email,
           'ada@example.com'
         );
-        assert.equal(messages[0].publishedAt, null);
+
+        assert.equal(emailMessage.publishedAt, null);
+
+        const notificationMessage =
+          notificationMessages[0];
+
+        assert.equal(
+          notificationMessage.aggregateId,
+          String(created.body.id)
+        );
+
+        assert.deepEqual(notificationMessage.payload, {
+          eventId: created.body.id,
+          eventTitle: created.body.title
+        });
+
+        const publicPayload = JSON.stringify(
+          notificationMessage.payload
+        );
+
+        assert.doesNotMatch(publicPayload, /Ada/);
+        assert.doesNotMatch(
+          publicPayload,
+          /ada@example\.com/
+        );
+
+        assert.equal(
+          notificationMessage.publishedAt,
+          null
+        );
       }
     );
 
