@@ -1,9 +1,34 @@
-// `npm run seed`: wipes the database and fills it with demo data again.
 import { seedDemoData } from './db/seed-demo-data.mjs';
+import { runMigrations } from './db/migrator.mjs';
 import { sequelize } from './db/sequelize.mjs';
+import { Event } from './models/index.mjs';
 
-await sequelize.sync({ force: true });
-await seedDemoData();
+let seeded = false;
 
-console.log('Database reset with demo data.');
-await sequelize.close();
+try {
+  await runMigrations();
+
+  await sequelize.transaction(async (transaction) => {
+    const eventCount = await Event.count({
+      transaction
+    });
+
+    if (eventCount > 0) {
+      return;
+    }
+
+    await seedDemoData({
+      transaction
+    });
+
+    seeded = true;
+  });
+
+  console.log(
+    seeded
+      ? 'Demo data added.'
+      : 'Seed skipped: events already exist.'
+  );
+} finally {
+  await sequelize.close();
+}
