@@ -20,6 +20,9 @@ export const env = Object.freeze({
   port: Number(process.env.PORT ?? 3000),
   logLevel: process.env.LOG_LEVEL ?? 'info',
   dbStorage: process.env.DB_STORAGE ?? './data/events.sqlite',
+  brevoApiKey: process.env.BREVO_API_KEY,
+mailFromAddress: process.env.MAIL_FROM_ADDRESS,
+mailFromName: process.env.MAIL_FROM_NAME ?? 'Campus Events',
   databaseUrl: process.env.DATABASE_URL,
   databaseUrlUnpooled: process.env.DATABASE_URL_UNPOOLED,
   testDatabaseUrl: process.env.TEST_DATABASE_URL,
@@ -30,3 +33,5 @@ export const env = Object.freeze({
     process.env.MAIL_FROM ??
     'Campus Events <no-reply@example.com>'
 });
+
+
