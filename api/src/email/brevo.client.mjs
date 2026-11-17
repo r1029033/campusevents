@@ -1,4 +1,5 @@
 import { env } from '../config/env.mjs';
+import { EmailProviderError } from './email.errors.mjs';
 
 const brevoEmailEndpoint = 'https://api.brevo.com/v3/smtp/email';
 
@@ -47,14 +48,21 @@ export async function sendTransactionalEmail({
     })
   });
 
-  if (!response.ok) {
-    const responseBody = await response.text();
+ if (!response.ok) {
+  const responseBody = await response.text();
 
-    throw new Error(
-      `Brevo rejected the email with status ${response.status}: ` +
-        responseBody.slice(0, 500)
-    );
-  }
+  const retryable =
+    response.status === 429 ||
+    response.status >= 500;
 
+  throw new EmailProviderError(
+    `Brevo rejected the email with status ${response.status}: ` +
+      responseBody.slice(0, 500),
+    {
+      status: response.status,
+      retryable
+    }
+  );
+}
   return response.json();
 }

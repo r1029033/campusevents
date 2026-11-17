@@ -1,5 +1,6 @@
 import { env } from '../config/env.mjs';
 import { sendTransactionalEmail } from './brevo.client.mjs';
+import { InvalidEmailJobError } from './email.errors.mjs';
 
 const requiredFields = [
   'email',
@@ -11,7 +12,9 @@ const requiredFields = [
 
 function validateJob(job) {
   if (!job || typeof job !== 'object') {
-    throw new Error('Registration email job must be an object');
+    throw new InvalidEmailJobError(
+  'Registration email job must be an object'
+);
   }
 
   for (const field of requiredFields) {
@@ -19,9 +22,9 @@ function validateJob(job) {
       typeof job[field] !== 'string' ||
       job[field].trim() === ''
     ) {
-      throw new Error(
-        `Registration email job is missing ${field}`
-      );
+throw new InvalidEmailJobError(
+  `Registration email job is missing ${field}`
+);
     }
   }
 }
@@ -43,7 +46,9 @@ function formatEventDate(startsAt) {
   const date = new Date(startsAt);
 
   if (Number.isNaN(date.getTime())) {
-    throw new Error('Registration email job has an invalid startsAt');
+throw new InvalidEmailJobError(
+  'Registration email job has an invalid startsAt'
+);
   }
 
   return new Intl.DateTimeFormat('en-GB', {

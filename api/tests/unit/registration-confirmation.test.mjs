@@ -4,6 +4,7 @@ import {
   buildRegistrationConfirmationEmail,
   sendRegistrationConfirmationEmail
 } from '../../src/email/registration-confirmation.mjs';
+import { InvalidEmailJobError } from '../../src/email/email.errors.mjs';
 
 const job = {
   email: 'student@example.com',
@@ -22,6 +23,18 @@ describe('registration confirmation email', () => {
       email.recipientEmail,
       'student@example.com'
     );
+
+    test('rejects a permanently malformed email job', () => {
+  assert.throws(
+    () => {
+      buildRegistrationConfirmationEmail({
+        ...job,
+        email: ''
+      });
+    },
+    InvalidEmailJobError
+  );
+});
 
     assert.equal(email.recipientName, 'Alex Student');
 
