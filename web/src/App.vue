@@ -1,5 +1,14 @@
 <script setup>
 import { RouterLink, RouterView } from 'vue-router';
+import ToastStack from './components/ToastStack.vue';
+import {
+  useNotifications
+} from './composables/useNotifications.js';
+
+const {
+  toasts,
+  removeToast
+} = useNotifications();
 </script>
 
 <template>
@@ -14,4 +23,9 @@ import { RouterLink, RouterView } from 'vue-router';
   <main class="page">
     <RouterView />
   </main>
+
+  <ToastStack
+    :toasts="toasts"
+    @dismiss="removeToast"
+  />
 </template>
