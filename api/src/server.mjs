@@ -1,10 +1,10 @@
 import { app } from './app.mjs';
 import { env } from './config/env.mjs';
 import { seedDemoData } from './db/seed-demo-data.mjs';
-import { sequelize } from './db/sequelize.mjs';
 import { Event } from './models/index.mjs';
+import { runMigrations } from './db/migrator.mjs';
 
-await sequelize.sync();
+await runMigrations();
 
 // First start on a fresh clone: fill the empty database so the UI has something to show.
 if ((await Event.count()) === 0) {
