@@ -22,6 +22,7 @@ export const env = Object.freeze({
   dbStorage: process.env.DB_STORAGE ?? './data/events.sqlite',
   databaseUrl: process.env.DATABASE_URL,
   databaseUrlUnpooled: process.env.DATABASE_URL_UNPOOLED,
+  testDatabaseUrl: process.env.TEST_DATABASE_URL,
   amqpUrl: process.env.AMQP_URL,
   redisUrl: process.env.REDIS_URL,
   smtpUrl: process.env.SMTP_URL,

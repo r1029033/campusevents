@@ -3,8 +3,8 @@ import { env } from '../config/env.mjs';
 
 const logging = false;
 
-const createPostgresConnection = () =>
-  new Sequelize(env.databaseUrl, {
+const createPostgresConnection = (databaseUrl) =>
+  new Sequelize(databaseUrl, {
     dialect: 'postgres',
     logging,
     pool: {
@@ -22,9 +22,11 @@ const createSqliteConnection = () =>
     logging
   });
 
-const shouldUsePostgres =
-  env.nodeEnv !== 'test' && Boolean(env.databaseUrl);
+const postgresUrl =
+  env.testDatabaseUrl ?? env.databaseUrl;
+
+const shouldUsePostgres = Boolean(postgresUrl);
 
 export const sequelize = shouldUsePostgres
-  ? createPostgresConnection()
+  ? createPostgresConnection(postgresUrl)
   : createSqliteConnection();

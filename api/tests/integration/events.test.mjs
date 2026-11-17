@@ -7,6 +7,14 @@ import { createTestApp, validEvent } from '../helpers/testApp.mjs';
 // They only talk HTTP, so they don't care how the code behind the URLs is organised.
 const inDays = (days) => new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
 
+const postgresOnly = (name, testFunction) => {
+  if (process.env.TEST_DATABASE_URL) {
+    return it(name, testFunction);
+  }
+
+  return it.skip(name, testFunction);
+};
+
 describe('Events API', () => {
   let app;
 
@@ -127,6 +135,49 @@ describe('Events API', () => {
       assert.equal(res.status, 201);
       assert.equal(res.body.email, 'ada@example.com');
       assert.equal(event.body.spotsLeft, 4);
+
+          postgresOnly(
+      'sells the final seat only once under concurrent requests',
+      async () => {
+        const created = await request(app)
+          .post('/api/events')
+          .send(validEvent({
+            title: 'One Seat Event',
+            capacity: 1
+          }));
+
+        const registrationUrl =
+          `/api/events/${created.body.id}/registrations`;
+
+        const [first, second] = await Promise.all([
+          request(app)
+            .post(registrationUrl)
+            .send({
+              name: 'Ada',
+              email: 'ada@example.com'
+            }),
+          request(app)
+            .post(registrationUrl)
+            .send({
+              name: 'Grace',
+              email: 'grace@example.com'
+            })
+        ]);
+
+        const statuses = [
+          first.status,
+          second.status
+        ].sort();
+
+        assert.deepEqual(statuses, [201, 409]);
+
+        const registrations = await request(app)
+          .get(registrationUrl);
+
+        assert.equal(registrations.status, 200);
+        assert.equal(registrations.body.length, 1);
+      }
+    );
     });
 
     it('returns 409 when all event places are taken', async () => {

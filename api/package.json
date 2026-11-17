@@ -11,7 +11,8 @@
     "seed": "node src/seed.mjs",
     "test": "node --env-file=.env.test --test --test-reporter=spec \"tests/**/*.test.mjs\"",
     "test:coverage": "node --env-file=.env.test --test --experimental-test-coverage \"tests/**/*.test.mjs\"",
-    "worker:mail": "node src/workers/mail.worker.mjs"
+    "worker:mail": "node src/workers/mail.worker.mjs",
+    "test:postgres": "node --env-file=.env.postgres.test --test --test-reporter=spec \"tests/**/*.test.mjs\""
   },
   "dependencies": {
     "amqplib": "^2.2.0",
