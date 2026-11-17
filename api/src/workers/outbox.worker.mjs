@@ -23,8 +23,13 @@ async function publishMessage(message) {
   }
 }
 
-export async function dispatchPendingMessages() {
-  const messages = await findPending();
+export async function dispatchPendingMessages({
+  loadPendingMessages = findPending,
+  publishMessageToBroker = publishMessage,
+  markMessagePublished = markPublished,
+  recordMessageFailure = recordFailure
+} = {}) {
+  const messages = await loadPendingMessages();
   const result = {
     processed: messages.length,
     published: 0,
@@ -33,8 +38,8 @@ export async function dispatchPendingMessages() {
 
   for (const message of messages) {
     try {
-      await publishMessage(message);
-      await markPublished(message.id);
+   await publishMessageToBroker(message);
+await markMessagePublished(message.id);
       result.published += 1;
 
       logger.info('Outbox message published', {
@@ -42,7 +47,7 @@ export async function dispatchPendingMessages() {
         type: message.type
       });
     } catch (error) {
-      await recordFailure(message.id, error);
+      await recordMessageFailure(message.id, error);
       result.failed += 1;
 
       logger.warn('Outbox message publication failed', {
