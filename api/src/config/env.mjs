@@ -25,6 +25,9 @@ mailFromAddress: process.env.MAIL_FROM_ADDRESS,
 mailFromName: process.env.MAIL_FROM_NAME ?? 'Campus Events',
 eventTimeZone:
   process.env.EVENT_TIME_ZONE ?? 'Europe/Budapest',
+  mailRetryDelayMs: Number(
+  process.env.MAIL_RETRY_DELAY_MS ?? 30_000
+),
   databaseUrl: process.env.DATABASE_URL,
   databaseUrlUnpooled: process.env.DATABASE_URL_UNPOOLED,
   testDatabaseUrl: process.env.TEST_DATABASE_URL,
