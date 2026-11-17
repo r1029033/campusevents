@@ -2,16 +2,22 @@ import { app } from './app.mjs';
 import { env } from './config/env.mjs';
 import { runMigrations } from './db/migrator.mjs';
 import {
+  startMailWorker,
+  stopMailWorker
+} from './workers/mail.worker.mjs';
+import {
   startOutboxWorker,
   stopOutboxWorker
 } from './workers/outbox.worker.mjs';
 
 await runMigrations();
-startOutboxWorker();
 
 const port = env.port;
 
 const server = app.listen(port, () => {
+  startOutboxWorker();
+  startMailWorker();
+
   console.log(
     `Campus Events API running on http://localhost:${port}/api`
   );
@@ -19,7 +25,20 @@ const server = app.listen(port, () => {
 
 let shuttingDown = false;
 
-function shutdown(signal) {
+function closeHttpServer() {
+  return new Promise((resolve, reject) => {
+    server.close((error) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+
+      resolve();
+    });
+  });
+}
+
+async function shutdown(signal) {
   if (shuttingDown) {
     return;
   }
@@ -29,21 +48,24 @@ function shutdown(signal) {
 
   stopOutboxWorker();
 
-  server.close((error) => {
-    if (error) {
-      console.error('Failed to close the HTTP server', error);
-      process.exit(1);
-    }
+  try {
+    await Promise.all([
+      stopMailWorker(),
+      closeHttpServer()
+    ]);
 
-    console.log('HTTP server stopped');
+    console.log('Campus Events API stopped');
     process.exit(0);
-  });
+  } catch (error) {
+    console.error('Graceful shutdown failed', error);
+    process.exit(1);
+  }
 }
 
 process.once('SIGINT', () => {
-  shutdown('SIGINT');
+  void shutdown('SIGINT');
 });
 
 process.once('SIGTERM', () => {
-  shutdown('SIGTERM');
+  void shutdown('SIGTERM');
 });
