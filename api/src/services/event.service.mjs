@@ -1,5 +1,10 @@
 import { AppError } from '../errors/app-error.mjs';
+import { sequelize } from '../db/sequelize.mjs';
+import {
+  buildEventCreatedNotification
+} from '../messaging/notification-messages.mjs';
 import * as eventRepository from '../repositories/event.repository.mjs';
+import * as outboxRepository from '../repositories/outbox.repository.mjs';
 import * as registrationRepository from '../repositories/registration.repository.mjs';
 import {
   cacheKeys,
@@ -63,7 +68,21 @@ export async function getEvent(id) {
 }
 
 export async function createEvent(data) {
-  const event = await eventRepository.create(data);
+  const event = await sequelize.transaction(
+    async (transaction) => {
+      const createdEvent = await eventRepository.create(
+        data,
+        transaction
+      );
+
+      await outboxRepository.create(
+        buildEventCreatedNotification(createdEvent),
+        transaction
+      );
+
+      return createdEvent;
+    }
+  );
 
   await deleteKeys(
     cacheKeys.events,

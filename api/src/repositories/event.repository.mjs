@@ -22,8 +22,11 @@ export async function findByIdForUpdate(id, transaction) {
   return event?.toJSON() ?? null;
 }
 
-export async function create(data) {
-  const event = await Event.create(data);
+export async function create(data, transaction) {
+  const event = await Event.create(data, {
+    transaction
+  });
+
   return event.toJSON();
 }
 

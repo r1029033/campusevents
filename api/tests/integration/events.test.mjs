@@ -46,6 +46,23 @@ describe('Events API', () => {
     assert.equal(res.status, 201);
     assert.equal(res.headers.location, `/api/events/${res.body.id}`);
     assert.equal(res.body.title, 'Backend Bootcamp');
+
+    const messages = await OutboxMessage.findAll({
+      where: {
+        type: 'notification.event-created'
+      }
+    });
+
+    assert.equal(messages.length, 1);
+    assert.equal(
+      messages[0].aggregateId,
+      String(res.body.id)
+    );
+    assert.deepEqual(messages[0].payload, {
+      eventId: res.body.id,
+      eventTitle: 'Backend Bootcamp'
+    });
+    assert.equal(messages[0].publishedAt, null);
   });
 
   it('POST /events returns 400 with details for invalid input', async () => {
