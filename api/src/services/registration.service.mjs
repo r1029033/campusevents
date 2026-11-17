@@ -2,11 +2,12 @@ import { cacheKeys, cacheTtlSeconds } from '../cache/cache-keys.mjs';
 import { deleteKeys, getJson, setJson } from '../cache/redis-cache.mjs';
 import { logger } from '../config/logger.mjs';
 import { AppError } from '../errors/app-error.mjs';
-import { publishRegistrationConfirmation } from '../messaging/mail.publisher.mjs';
 import * as eventRepository from '../repositories/event.repository.mjs';
 import * as registrationRepository from '../repositories/registration.repository.mjs';
 import { UniqueConstraintError } from 'sequelize';
 import { sequelize } from '../db/sequelize.mjs';
+import { messageTypes } from '../messaging/message-types.mjs';
+import * as outboxRepository from '../repositories/outbox.repository.mjs';
 
 const eventNotFound = (id) =>
   new AppError(
@@ -92,6 +93,22 @@ export async function register(eventId, participant) {
             transaction
           );
 
+        await outboxRepository.create(
+          {
+            type:
+              messageTypes.registrationConfirmationEmail,
+            aggregateId: String(registration.id),
+            payload: {
+              email: registration.email,
+              name: registration.name,
+              eventTitle: event.title,
+              startsAt: event.startsAt,
+              location: event.location
+            }
+          },
+          transaction
+        );
+
         return {
           event,
           registration
@@ -122,13 +139,6 @@ export async function register(eventId, participant) {
     cacheKeys.stats
   );
 
-  void publishRegistrationConfirmation({
-    email: registration.email,
-    name: registration.name,
-    eventTitle: event.title,
-    startsAt: event.startsAt,
-    location: event.location
-  });
 
   logger.info(
     `new registration for ${event.title}: ` +

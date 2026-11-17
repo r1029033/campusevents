@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { beforeEach, describe, it } from 'node:test';
 import request from 'supertest';
 import { createTestApp, validEvent } from '../helpers/testApp.mjs';
+import { OutboxMessage } from '../../src/models/index.mjs';
 
 // Integration tests: real Express app + real (in-memory) SQLite database.
 // They only talk HTTP, so they don't care how the code behind the URLs is organised.
@@ -135,8 +136,9 @@ describe('Events API', () => {
       assert.equal(res.status, 201);
       assert.equal(res.body.email, 'ada@example.com');
       assert.equal(event.body.spotsLeft, 4);
+    });
 
-          postgresOnly(
+    postgresOnly(
       'sells the final seat only once under concurrent requests',
       async () => {
         const created = await request(app)
@@ -178,7 +180,43 @@ describe('Events API', () => {
         assert.equal(registrations.body.length, 1);
       }
     );
-    });
+
+    it(
+      'stores a confirmation job with the registration',
+      async () => {
+        const created = await request(app)
+          .post('/api/events')
+          .send(validEvent());
+
+        const response = await request(app)
+          .post(
+            `/api/events/${created.body.id}/registrations`
+          )
+          .send({
+            name: 'Ada',
+            email: 'ada@example.com'
+          });
+
+        assert.equal(response.status, 201);
+
+        const messages = await OutboxMessage.findAll();
+
+        assert.equal(messages.length, 1);
+        assert.equal(
+          messages[0].type,
+          'email.registration-confirmation'
+        );
+        assert.equal(
+          messages[0].aggregateId,
+          String(response.body.id)
+        );
+        assert.equal(
+          messages[0].payload.email,
+          'ada@example.com'
+        );
+        assert.equal(messages[0].publishedAt, null);
+      }
+    );
 
     it('returns 409 when all event places are taken', async () => {
       const created = await request(app)
