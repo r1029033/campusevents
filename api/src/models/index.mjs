@@ -1,5 +1,6 @@
 import { Event } from './event.mjs';
 import { Registration } from './registration.mjs';
+import { OutboxMessage } from './outbox-message.mjs';
 
 Event.hasMany(Registration, {
   foreignKey: {
@@ -13,4 +14,8 @@ Registration.belongsTo(Event, {
   foreignKey: 'eventId'
 });
 
-export { Event, Registration };
+export {
+  Event,
+  OutboxMessage,
+  Registration
+};
