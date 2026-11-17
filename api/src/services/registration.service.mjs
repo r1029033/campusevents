@@ -5,6 +5,8 @@ import { AppError } from '../errors/app-error.mjs';
 import { publishRegistrationConfirmation } from '../messaging/mail.publisher.mjs';
 import * as eventRepository from '../repositories/event.repository.mjs';
 import * as registrationRepository from '../repositories/registration.repository.mjs';
+import { UniqueConstraintError } from 'sequelize';
+import { sequelize } from '../db/sequelize.mjs';
 
 const eventNotFound = (id) =>
   new AppError(
@@ -35,38 +37,84 @@ export async function listRegistrations(eventId) {
 }
 
 export async function register(eventId, participant) {
-  const event = await eventRepository.findById(eventId);
+  let result;
 
-  if (!event) {
-    throw eventNotFound(eventId);
-  }
+  try {
+    result = await sequelize.transaction(
+      async (transaction) => {
+        const event =
+          await eventRepository.findByIdForUpdate(
+            eventId,
+            transaction
+          );
 
-  const existing =
-    await registrationRepository.findByEventAndEmail(
-      eventId,
-      participant.email
+        if (!event) {
+          throw eventNotFound(eventId);
+        }
+
+        const existing =
+          await registrationRepository.findByEventAndEmail(
+            eventId,
+            participant.email,
+            transaction
+          );
+
+        if (existing) {
+          throw new AppError(
+            409,
+            'CONFLICT',
+            `${participant.email} is already registered ` +
+              'for this event'
+          );
+        }
+
+        const count =
+          await registrationRepository.countByEventId(
+            eventId,
+            transaction
+          );
+
+        if (count >= event.capacity) {
+          throw new AppError(
+            409,
+            'CONFLICT',
+            'Event is full'
+          );
+        }
+
+        const registration =
+          await registrationRepository.create(
+            {
+              eventId,
+              name: participant.name,
+              email: participant.email
+            },
+            transaction
+          );
+
+        return {
+          event,
+          registration
+        };
+      }
     );
+  } catch (err) {
+    if (err instanceof UniqueConstraintError) {
+      throw new AppError(
+        409,
+        'CONFLICT',
+        `${participant.email} is already registered ` +
+          'for this event'
+      );
+    }
 
-  if (existing) {
-    throw new AppError(
-      409,
-      'CONFLICT',
-      `${participant.email} is already registered for this event`
-    );
+    throw err;
   }
 
-  const count =
-    await registrationRepository.countByEventId(eventId);
-
-  if (count >= event.capacity) {
-    throw new AppError(409, 'CONFLICT', 'Event is full');
-  }
-
-  const registration = await registrationRepository.create({
-    eventId,
-    name: participant.name,
-    email: participant.email
-  });
+  const {
+    event,
+    registration
+  } = result;
 
   await deleteKeys(
     cacheKeys.event(eventId),
@@ -84,7 +132,7 @@ export async function register(eventId, participant) {
 
   logger.info(
     `new registration for ${event.title}: ` +
-    `${participant.name} <${participant.email}>`
+      `${participant.name} <${participant.email}>`
   );
 
   return registration;

@@ -13,6 +13,15 @@ export async function findById(id) {
   return event?.toJSON() ?? null;
 }
 
+export async function findByIdForUpdate(id, transaction) {
+  const event = await Event.findByPk(id, {
+    transaction,
+    lock: transaction.LOCK.UPDATE
+  });
+
+  return event?.toJSON() ?? null;
+}
+
 export async function create(data) {
   const event = await Event.create(data);
   return event.toJSON();

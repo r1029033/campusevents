@@ -11,24 +11,38 @@ export async function findAllByEventId(eventId) {
   );
 }
 
-export async function findByEventAndEmail(eventId, email) {
+export async function findByEventAndEmail(
+  eventId,
+  email,
+  transaction
+) {
   const registration = await Registration.findOne({
     where: {
       eventId,
       email
-    }
+    },
+    transaction
   });
 
   return registration?.toJSON() ?? null;
 }
 
-export function countByEventId(eventId) {
+export function countByEventId(eventId, transaction) {
   return Registration.count({
-    where: { eventId }
+    where: {
+      eventId
+    },
+    transaction
   });
 }
 
-export async function create(data) {
-  const registration = await Registration.create(data);
+export async function create(data, transaction) {
+  const registration = await Registration.create(
+    data,
+    {
+      transaction
+    }
+  );
+
   return registration.toJSON();
 }
