@@ -6,3 +6,6 @@ export const mailRetryQueueName =
 
 export const mailDeadLetterQueueName =
   `${mailQueueName}.dead`;
+
+export const browserNotificationExchangeName =
+  'browser-notifications';

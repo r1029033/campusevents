@@ -1,5 +1,5 @@
 import { logger } from '../config/logger.mjs';
-import { publishOutboxMessage } from '../messaging/mail.publisher.mjs';
+import { publishMailMessage } from '../messaging/mail.publisher.mjs';
 import { messageTypes } from '../messaging/message-types.mjs';
 import {
   findPending,
@@ -15,7 +15,7 @@ let cycleRunning = false;
 async function publishMessage(message) {
   switch (message.type) {
     case messageTypes.registrationConfirmationEmail:
-      await publishOutboxMessage(message);
+      await publishMailMessage(message);
       return;
 
     default:
@@ -38,8 +38,8 @@ export async function dispatchPendingMessages({
 
   for (const message of messages) {
     try {
-   await publishMessageToBroker(message);
-await markMessagePublished(message.id);
+      await publishMessageToBroker(message);
+      await markMessagePublished(message.id);
       result.published += 1;
 
       logger.info('Outbox message published', {
