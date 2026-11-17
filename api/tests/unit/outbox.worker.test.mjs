@@ -1,7 +1,10 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import { messageTypes } from '../../src/messaging/message-types.mjs';
-import { dispatchPendingMessages } from '../../src/workers/outbox.worker.mjs';
+import {
+  dispatchPendingMessages,
+  routeOutboxMessage
+} from '../../src/workers/outbox.worker.mjs';
 
 const message = {
   id: '7e73b905-541f-49ee-b978-f0f162f99483',
@@ -13,6 +16,57 @@ const message = {
 };
 
 describe('outbox worker', () => {
+  test('routes mail and notification message types', async () => {
+    const mailMessages = [];
+    const notificationMessages = [];
+    const publishers = {
+      publishMail: async (pendingMessage) => {
+        mailMessages.push(pendingMessage.type);
+      },
+      publishNotification: async (pendingMessage) => {
+        notificationMessages.push(pendingMessage.type);
+      }
+    };
+
+    await routeOutboxMessage(message, publishers);
+
+    await routeOutboxMessage(
+      {
+        ...message,
+        type: messageTypes.eventCreatedNotification
+      },
+      publishers
+    );
+
+    await routeOutboxMessage(
+      {
+        ...message,
+        type:
+          messageTypes.registrationCreatedNotification
+      },
+      publishers
+    );
+
+    assert.deepEqual(mailMessages, [
+      messageTypes.registrationConfirmationEmail
+    ]);
+
+    assert.deepEqual(notificationMessages, [
+      messageTypes.eventCreatedNotification,
+      messageTypes.registrationCreatedNotification
+    ]);
+  });
+
+  test('rejects unsupported message types', async () => {
+    await assert.rejects(
+      routeOutboxMessage({
+        ...message,
+        type: 'unknown.message'
+      }),
+      /Unsupported outbox message type/
+    );
+  });
+
   test('marks a message published after broker confirmation', async () => {
     const publishedIds = [];
     const completedIds = [];

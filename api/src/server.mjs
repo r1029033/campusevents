@@ -2,9 +2,16 @@ import { app } from './app.mjs';
 import { env } from './config/env.mjs';
 import { runMigrations } from './db/migrator.mjs';
 import {
+  closeNotificationClients
+} from './notifications/notification.hub.mjs';
+import {
   startMailWorker,
   stopMailWorker
 } from './workers/mail.worker.mjs';
+import {
+  startNotificationWorker,
+  stopNotificationWorker
+} from './workers/notification.worker.mjs';
 import {
   startOutboxWorker,
   stopOutboxWorker
@@ -14,9 +21,20 @@ await runMigrations();
 
 const port = env.port;
 
-const server = app.listen(port, () => {
+async function startBackgroundWorkers() {
+  await startNotificationWorker();
+
   startOutboxWorker();
   startMailWorker();
+}
+
+const server = app.listen(port, () => {
+  void startBackgroundWorkers().catch((error) => {
+    console.error(
+      'Could not start background workers',
+      error
+    );
+  });
 
   console.log(
     `Campus Events API running on http://localhost:${port}/api`
@@ -46,11 +64,13 @@ async function shutdown(signal) {
   shuttingDown = true;
   console.log(`${signal} received: shutting down`);
 
+  closeNotificationClients();
   stopOutboxWorker();
 
   try {
     await Promise.all([
       stopMailWorker(),
+      stopNotificationWorker(),
       closeHttpServer()
     ]);
 

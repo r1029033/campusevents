@@ -2,6 +2,9 @@ import { logger } from '../config/logger.mjs';
 import { publishMailMessage } from '../messaging/mail.publisher.mjs';
 import { messageTypes } from '../messaging/message-types.mjs';
 import {
+  publishNotificationMessage
+} from '../messaging/notification.publisher.mjs';
+import {
   findPending,
   markPublished,
   recordFailure
@@ -12,10 +15,21 @@ const defaultPollIntervalMs = 5_000;
 let workerTimer;
 let cycleRunning = false;
 
-async function publishMessage(message) {
+export async function routeOutboxMessage(
+  message,
+  {
+    publishMail = publishMailMessage,
+    publishNotification = publishNotificationMessage
+  } = {}
+) {
   switch (message.type) {
     case messageTypes.registrationConfirmationEmail:
-      await publishMailMessage(message);
+      await publishMail(message);
+      return;
+
+    case messageTypes.eventCreatedNotification:
+    case messageTypes.registrationCreatedNotification:
+      await publishNotification(message);
       return;
 
     default:
@@ -25,7 +39,7 @@ async function publishMessage(message) {
 
 export async function dispatchPendingMessages({
   loadPendingMessages = findPending,
-  publishMessageToBroker = publishMessage,
+  publishMessageToBroker = routeOutboxMessage,
   markMessagePublished = markPublished,
   recordMessageFailure = recordFailure
 } = {}) {

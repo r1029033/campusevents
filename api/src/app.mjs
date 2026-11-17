@@ -8,6 +8,9 @@ import { sequelize } from './db/sequelize.mjs';
 import { errorHandler } from './middleware/error-handler.mjs';
 import { notFoundHandler } from './middleware/not-found.mjs';
 import { eventRouter } from './routes/event.routes.mjs';
+import {
+  notificationRouter
+} from './routes/notification.routes.mjs';
 import { registrationRouter } from './routes/registration.routes.mjs';
 import { statsRouter } from './routes/stats.routes.mjs';
 
@@ -38,6 +41,7 @@ app.get('/api/health', async (_req, res) => {
 app.use('/api/events', eventRouter);
 app.use('/api/events', registrationRouter);
 app.use('/api/stats', statsRouter);
+app.use('/api/notifications', notificationRouter);
 
 app.use('/api', notFoundHandler);
 
