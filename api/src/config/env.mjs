@@ -1,8 +1,17 @@
+import path from 'node:path';
+
 if (process.env.NODE_ENV !== 'test') {
-  try {
-    process.loadEnvFile();
-  } catch {
-    // Environment variables may instead be supplied by the hosting platform.
+  const envFiles = [
+    path.resolve(import.meta.dirname, '../../../.env.local'),
+    path.resolve(import.meta.dirname, '../../.env')
+  ];
+
+  for (const envFile of envFiles) {
+    try {
+      process.loadEnvFile(envFile);
+    } catch {
+      // The file is optional because Render supplies variables directly.
+    }
   }
 }
 
@@ -11,6 +20,8 @@ export const env = Object.freeze({
   port: Number(process.env.PORT ?? 3000),
   logLevel: process.env.LOG_LEVEL ?? 'info',
   dbStorage: process.env.DB_STORAGE ?? './data/events.sqlite',
+  databaseUrl: process.env.DATABASE_URL,
+  databaseUrlUnpooled: process.env.DATABASE_URL_UNPOOLED,
   amqpUrl: process.env.AMQP_URL,
   redisUrl: process.env.REDIS_URL,
   smtpUrl: process.env.SMTP_URL,
