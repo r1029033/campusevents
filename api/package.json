@@ -7,6 +7,7 @@
   "scripts": {
     "start": "node src/server.mjs",
     "dev": "node --watch src/server.mjs",
+    "migrate": "node src/db/migrate.mjs",
     "seed": "node src/seed.mjs",
     "test": "node --env-file=.env.test --test --test-reporter=spec \"tests/**/*.test.mjs\"",
     "test:coverage": "node --env-file=.env.test --test --experimental-test-coverage \"tests/**/*.test.mjs\"",
@@ -20,6 +21,7 @@
     "redis": "^6.3.1",
     "sequelize": "^6.37.8",
     "sqlite3": "^5.1.7",
+    "umzug": "^3.8.3",
     "winston": "^3.19.0",
     "zod": "^4.6.5"
   },
