@@ -20,14 +20,15 @@ export const env = Object.freeze({
   port: Number(process.env.PORT ?? 3000),
   logLevel: process.env.LOG_LEVEL ?? 'info',
   dbStorage: process.env.DB_STORAGE ?? './data/events.sqlite',
+  mcpApiKey: process.env.MCP_API_KEY,
   brevoApiKey: process.env.BREVO_API_KEY,
-mailFromAddress: process.env.MAIL_FROM_ADDRESS,
-mailFromName: process.env.MAIL_FROM_NAME ?? 'Campus Events',
-eventTimeZone:
-  process.env.EVENT_TIME_ZONE ?? 'Europe/Budapest',
+  mailFromAddress: process.env.MAIL_FROM_ADDRESS,
+  mailFromName: process.env.MAIL_FROM_NAME ?? 'Campus Events',
+  eventTimeZone:
+    process.env.EVENT_TIME_ZONE ?? 'Europe/Budapest',
   mailRetryDelayMs: Number(
-  process.env.MAIL_RETRY_DELAY_MS ?? 30_000
-),
+    process.env.MAIL_RETRY_DELAY_MS ?? 30_000
+  ),
   databaseUrl: process.env.DATABASE_URL,
   databaseUrlUnpooled: process.env.DATABASE_URL_UNPOOLED,
   testDatabaseUrl: process.env.TEST_DATABASE_URL,

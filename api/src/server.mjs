@@ -1,6 +1,7 @@
 import { app } from './app.mjs';
 import { env } from './config/env.mjs';
 import { runMigrations } from './db/migrator.mjs';
+import { closeMcpHandler } from './mcp/mcp.routes.mjs';
 import {
   closeNotificationClients
 } from './notifications/notification.hub.mjs';
@@ -71,6 +72,7 @@ async function shutdown(signal) {
     await Promise.all([
       stopMailWorker(),
       stopNotificationWorker(),
+      closeMcpHandler(),
       closeHttpServer()
     ]);
 

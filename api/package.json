@@ -12,9 +12,11 @@
     "test": "node --env-file=.env.test --test --test-reporter=spec \"tests/**/*.test.mjs\"",
     "test:coverage": "node --env-file=.env.test --test --experimental-test-coverage \"tests/**/*.test.mjs\"",
     "worker:mail": "node src/workers/mail.worker.mjs",
-    "test:postgres": "node --env-file=.env.postgres.test --test --test-reporter=spec \"tests/**/*.test.mjs\""
+    "test:postgres": "node --env-file=.env.postgres.test --test --test-concurrency=1 --test-reporter=spec \"tests/**/*.test.mjs\""
   },
   "dependencies": {
+    "@modelcontextprotocol/node": "^2.1.2",
+    "@modelcontextprotocol/server": "^2.4.0",
     "amqplib": "^2.2.0",
     "express": "^5.2.1",
     "nodemailer": "^10.0.14",

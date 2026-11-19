@@ -11,9 +11,17 @@ services:
         value: production
       - key: LOG_LEVEL
         value: info
-      - key: DB_STORAGE
-        value: /tmp/events.sqlite
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_URL_UNPOOLED
+        sync: false
+      - key: MCP_API_KEY
+        sync: false
       - key: AMQP_URL
         sync: false
       - key: REDIS_URL
+        sync: false
+      - key: BREVO_API_KEY
+        sync: false
+      - key: MAIL_FROM_ADDRESS
         sync: false

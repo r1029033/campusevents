@@ -7,6 +7,7 @@ import { logger } from './config/logger.mjs';
 import { sequelize } from './db/sequelize.mjs';
 import { errorHandler } from './middleware/error-handler.mjs';
 import { notFoundHandler } from './middleware/not-found.mjs';
+import { mcpRouter } from './mcp/mcp.routes.mjs';
 import { eventRouter } from './routes/event.routes.mjs';
 import {
   notificationRouter
@@ -42,6 +43,7 @@ app.use('/api/events', eventRouter);
 app.use('/api/events', registrationRouter);
 app.use('/api/stats', statsRouter);
 app.use('/api/notifications', notificationRouter);
+app.use('/mcp', mcpRouter);
 
 app.use('/api', notFoundHandler);
 
