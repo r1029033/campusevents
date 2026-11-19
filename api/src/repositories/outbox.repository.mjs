@@ -57,7 +57,8 @@ export async function markPublished(id) {
   const [updated] = await OutboxMessage.update(
     {
       publishedAt: new Date(),
-      lastError: null
+      lastError: null,
+      payload: {}
     },
     {
       where: {

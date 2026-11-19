@@ -48,21 +48,22 @@ export async function sendTransactionalEmail({
     })
   });
 
- if (!response.ok) {
-  const responseBody = await response.text();
+  if (!response.ok) {
+    const responseBody = await response.text();
 
-  const retryable =
-    response.status === 429 ||
-    response.status >= 500;
+    const retryable =
+      response.status === 429 ||
+      response.status >= 500;
 
-  throw new EmailProviderError(
-    `Brevo rejected the email with status ${response.status}: ` +
-      responseBody.slice(0, 500),
-    {
-      status: response.status,
-      retryable
-    }
-  );
-}
+    throw new EmailProviderError(
+      `Brevo rejected the email with status ${response.status}: ` +
+        responseBody.slice(0, 500),
+      {
+        status: response.status,
+        retryable
+      }
+    );
+  }
+
   return response.json();
 }

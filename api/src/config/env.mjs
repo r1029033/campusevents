@@ -33,11 +33,7 @@ export const env = Object.freeze({
   databaseUrlUnpooled: process.env.DATABASE_URL_UNPOOLED,
   testDatabaseUrl: process.env.TEST_DATABASE_URL,
   amqpUrl: process.env.AMQP_URL,
-  redisUrl: process.env.REDIS_URL,
-  smtpUrl: process.env.SMTP_URL,
-  mailFrom:
-    process.env.MAIL_FROM ??
-    'Campus Events <no-reply@example.com>'
+  redisUrl: process.env.REDIS_URL
 });
 
 

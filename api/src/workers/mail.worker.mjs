@@ -117,9 +117,10 @@ async function processMessage(channel, message) {
       message.properties.type !==
       messageTypes.registrationConfirmationEmail
     ) {
-throw new InvalidEmailJobError(
-  `Unsupported email message type: ${message.properties.type}`
-);
+      throw new InvalidEmailJobError(
+        'Unsupported email message type: ' +
+          message.properties.type
+      );
     }
 
     const job = JSON.parse(

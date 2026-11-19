@@ -1,10 +1,11 @@
 import { Sequelize } from 'sequelize';
 import { env } from '../config/env.mjs';
+import { enforceFullTlsVerification } from './postgres-url.mjs';
 
 const logging = false;
 
 const createPostgresConnection = (databaseUrl) =>
-  new Sequelize(databaseUrl, {
+  new Sequelize(enforceFullTlsVerification(databaseUrl), {
     dialect: 'postgres',
     logging,
     pool: {
